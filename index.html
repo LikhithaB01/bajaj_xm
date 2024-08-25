@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>21BEC2013 JSON Processor</title>
+</head>
+<body>
+    <h1>JSON Processor</h1>
+    <label for="jsonInput">Enter JSON:</label><br>
+    <textarea id="jsonInput" rows="4" cols="50"></textarea><br>
+    <button id="submitButton">Submit</button>
+
+    <div id="response"></div>
+    <div id="dropdownContainer" style="display:none;">
+        <label for="responseType">Select Response Type:</label>
+        <select id="responseType" multiple>
+            <option value="alphabets">Alphabets</option>
+            <option value="numbers">Numbers</option>
+            <option value="highest_lowercase">Highest Lowercase Alphabet</option>
+        </select>
+    </div>
+
+    <script>
+        document.getElementById('submitButton').addEventListener('click', async function() {
+            let jsonInput = document.getElementById('jsonInput').value;
+
+            // Replace smart quotes with standard quotes
+            jsonInput = jsonInput.replace(/[\u201C\u201D]/g, '"');
+
+            try {
+                const parsedData = JSON.parse(jsonInput);
+
+                const response = await fetch('/bfhl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(parsedData)
+                });
+
+                const responseData = await response.json();
+
+                document.getElementById('dropdownContainer').style.display = 'block';
+
+                document.getElementById('responseType').addEventListener('change', function() {
+                    const selectedOptions = Array.from(this.selectedOptions).map(option => option.value);
+
+                    let output = '<h3>Response:</h3>';
+                    if (selectedOptions.includes('alphabets')) {
+                        output += `<p>Alphabets: ${JSON.stringify(responseData.alphabets)}</p>`;
+                    }
+                    if (selectedOptions.includes('numbers')) {
+                        output += `<p>Numbers: ${JSON.stringify(responseData.numbers)}</p>`;
+                    }
+                    if (selectedOptions.includes('highest_lowercase')) {
+                        output += `<p>Highest Lowercase Alphabet: ${JSON.stringify(responseData.highest_lowercase_alphabet)}</p>`;
+                    }
+                    document.getElementById('response').innerHTML = output;
+                });
+            } catch (error) {
+                console.error("Error parsing JSON:", error.message);
+                document.getElementById('response').innerHTML = '<p style="color: red;">Invalid JSON input. Please try again.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
